@@ -119,10 +119,20 @@ def sync_spray_log(payload: SprayLogSyncInput, db: Session = Depends(get_db)):
 
 @app.get("/api/sync/spray-logs/")
 def get_spray_logs(db: Session = Depends(get_db)):
-    """Fetches all telemetry spray logs from the database, sorted by newest first."""
+    """Debug route to fetch telemetry spray logs and expose errors."""
+    import traceback
     try:
-        # We changed models.SprayLog.timestamp to models.SprayLog.applied_at
+        # 1. Attempt to query the database
         logs = db.query(models.SprayLog).order_by(models.SprayLog.applied_at.desc()).all()
         return logs
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+        # 2. Capture the full traceback and return it inside the 500 error
+        error_details = traceback.format_exc()
+        raise HTTPException(
+            status_code=500, 
+            detail={
+                "message": "Database query failed!",
+                "error": str(e),
+                "traceback": error_details.split("\n")  # Keeps it readable in JSON
+            }
+        )
