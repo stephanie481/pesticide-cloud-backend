@@ -121,7 +121,8 @@ def sync_spray_log(payload: SprayLogSyncInput, db: Session = Depends(get_db)):
 def get_spray_logs(db: Session = Depends(get_db)):
     """Fetches all telemetry spray logs from the database, sorted by newest first."""
     try:
-        logs = db.query(models.SprayLog).order_by(models.SprayLog.timestamp.desc()).all()
+        # We changed models.SprayLog.timestamp to models.SprayLog.applied_at
+        logs = db.query(models.SprayLog).order_by(models.SprayLog.applied_at.desc()).all()
         return logs
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
